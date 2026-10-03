@@ -38,14 +38,55 @@ from utils import save_yaml, check_env_vars, print_section_header
 
 load_dotenv()
 
-
 def pull_prompts_from_langsmith():
-    ...
+    print("Iniciando pull do prompt original...")
+    
+    # Conectando ao LangSmith
+    client = Client()
+    
+    # Pull do prompt
+    prompt = client.pull_prompt(
+        "leonanluppi/bug_to_user_story_v1",
+        dangerously_pull_public_prompt=True,
+    )
+    
+    print("Prompt recuperado com sucesso!")
+    
+    # Extraindo dados
+    prompt_data = {
+        "version": "v1",
+        "description": "Prompt original de baixa qualidade",
+        "system_prompt": "",
+        "user_prompt": ""
+    }
+    
+    for msg in prompt.messages:
+        class_name = type(msg).__name__
+        if 'System' in class_name:
+            prompt_data["system_prompt"] = msg.prompt.template
+        elif 'Human' in class_name or 'User' in class_name:
+            prompt_data["user_prompt"] = msg.prompt.template
+
+    # Salva o yaml na pasta prompts
+    output_path = Path(__file__).parent.parent / "prompts" / "bug_to_user_story_v1.yml"
+    save_yaml(prompt_data, str(output_path))
+    print(f"Prompt salvo localmente em: {output_path}")
 
 
 def main():
     """Função principal"""
-    ...
+    print_section_header("PULL PROMPT DO LANGSMITH")
+    
+    required_vars = ["LANGSMITH_API_KEY"]
+    if not check_env_vars(required_vars):
+        return 1
+        
+    try:
+        pull_prompts_from_langsmith()
+        return 0
+    except Exception as e:
+        print(f"\n❌ Erro durante a execução: {e}")
+        return 1
 
 
 if __name__ == "__main__":
