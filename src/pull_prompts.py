@@ -29,12 +29,13 @@ DICAS DE IMPLEMENTAÇÃO:
 - Use `save_yaml` de utils.py para gravar o resultado no arquivo .yml.
 """
 
-import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 from langsmith import Client
-from utils import save_yaml, check_env_vars, print_section_header
+
+from utils import check_env_vars, print_section_header, save_yaml
 
 load_dotenv()
 

@@ -38,13 +38,14 @@ DICAS DE IMPLEMENTAÇÃO:
 
 import os
 import sys
+
 from dotenv import load_dotenv
-from langsmith import Client
 from langchain_core.prompts import ChatPromptTemplate
-from utils import load_yaml, check_env_vars, print_section_header
+from langsmith import Client
+
+from utils import check_env_vars, load_yaml, print_section_header
 
 load_dotenv()
-
 
 def push_prompt_to_langsmith(prompt_name: str, prompt_data: dict) -> bool:
     """
