@@ -295,60 +295,76 @@ python src/push_prompts.py
 python src/evaluate.py
 ```
 
-## Entregável
+## Documentação do Projeto (Entrega)
 
-1. Repositório público no GitHub (fork do repositório base) contendo:
+### A) Técnicas Aplicadas (Fase 2)
 
-- Todo o código-fonte implementado
-- Arquivo prompts/bug_to_user_story_v2.yml 100% preenchido e funcional
-- Arquivo README.md atualizado
+**1. Role Prompting**
+- **Justificativa**: Atribuir uma persona clara ao modelo ajuda a alinhar o tom, a formatação e a maturidade técnica da resposta.
+- **Aplicação**: Iniciamos o *system_prompt* com a instrução: *"Você é um Product Manager Sênior altamente especializado em metodologias ágeis."*
 
-2. README.md deve conter:
+**2. Chain of Thought (CoT)**
+- **Justificativa**: Em tarefas complexas como a análise de falhas, forçar o LLM a "pensar passo a passo" antes de gerar a resposta final reduz alucinações e garante que as causas-raiz não sejam ignoradas.
+- **Aplicação**: Instruímos o modelo a gerar um bloco `<thought_process>` identificando o problema, o ator e o impacto de negócio **ANTES** de escrever a User Story.
 
-A) Seção "Técnicas Aplicadas (Fase 2)":
+**3. Few-Shot Learning (Obrigatório)**
+- **Justificativa**: Mostrar exemplos práticos do que esperamos calibra perfeitamente o formato de saída do LLM e ensina o modelo a lidar com *edge cases* (relatos curtos ou sem contexto).
+- **Aplicação**: Inserimos no *system_prompt* cenários completos de entrada e saída. Demonstramos as formatações de saída para bugs simples e a formatação extensa com múltiplos cabeçalhos para bugs complexos.
 
-- Quais técnicas avançadas você escolheu para refatorar os prompts
-- Justificativa de por que escolheu cada técnica
-- Exemplos práticos de como aplicou cada técnica
+**4. Negative Constraints**
+- **Justificativa**: Instruir o modelo especificamente sobre o que *não* fazer evita saídas prolixas e burocráticas que impactam negativamente as pontuações de Clareza nas métricas.
+- **Aplicação**: Foi inserida a regra "Não use jargões difíceis onde não for necessário e evite parágrafos longos ou redundantes", garantindo que a resposta permaneça concisa e direta mesmo contendo muitos detalhes técnicos.
 
-B) Seção "Resultados Finais":
+---
 
-- Link público do dataset de avaliação, com os experimentos (ver "Evidências no LangSmith")
-- Screenshots das avaliações com as notas mínimas de 0.8 atingidas
-- Comparação entre o prompt original (v1) e o seu otimizado (v2): o que mudou e por quê
+### B) Resultados Finais
 
-C) Seção "Como Executar":
+- **Link do Dataset de Avaliação (LangSmith)**: 
+  > [Acesse o Dataset de Avaliação e Experimentos aqui](https://smith.langchain.com/public/a02f9149-ea0e-46a5-81ab-4d29cc16fbc1/d)
 
-- Instruções claras e detalhadas de como executar o projeto
-- Pré-requisitos e dependências
-- Comandos para cada fase do projeto
+- **Comparação v1 vs v2**:
+  - **Prompt Original (v1)**: Era extremamente raso. O modelo tinha total liberdade geométrica, o que gerava User Stories com formatos aleatórios, critérios de aceite incompletos e nenhuma tolerância para relatos ruins.
+  - **Prompt Otimizado (v2)**: Com o uso de CoT e Few-Shot, as respostas passaram a seguir fielmente a padronização Markdown esperada pela equipe (Título, Descrição e Critérios de Aceite). Além disso, o modelo ganhou senso crítico para identificar quando o relato do usuário não possui dados suficientes, adaptando a User Story de acordo.
 
-3. Evidências no LangSmith:
+- **Screenshots das Métricas (≥ 0.8)**:
+  ![Feedback Scores](assets/feedback_scores.png)
 
-- Link público do dataset de avaliação (ou screenshots do dashboard)
-- Devem estar visíveis:
-  - Dataset de avaliação com 15 exemplos
-  - Execuções dos prompts v2 (otimizados) com notas ≥ 0.8
-  - Tracing detalhado de pelo menos 3 exemplos
+---
 
-O link que o `src/evaluate.py` imprime ao final só abre para quem tem acesso ao seu
-workspace. Para gerar um endereço que qualquer pessoa consiga abrir, compartilhe o
-dataset de avaliação — ele expõe junto os experimentos rodados contra ele:
+### C) Como Executar
 
-```python
-from langsmith import Client
+**1. Pré-requisitos**
+- Python 3.10+ instalado
+- Conta ativa e API Keys do [LangSmith](https://smith.langchain.com/) e OpenAI (para usar gpt-4o-mini).
 
-print(Client().share_dataset(dataset_name="<seu LANGSMITH_PROJECT>-eval")["url"])
+**2. Preparação do Ambiente**
+```bash
+# 1. Instale o ambiente virtual
+python -m venv venv
+
+# 2. Ative a venv (Windows)
+.\venv\Scripts\activate
+# (Para Linux/Mac use: source venv/bin/activate)
+
+# 3. Instale as dependências
+pip install -r requirements.txt
+
+# 4. Configure as chaves de acesso
+cp .env.example .env
+# Edite o .env com sua OPENAI_API_KEY, LANGSMITH_API_KEY e LANGSMITH_HUB_HANDLE
 ```
 
-Rode uma vez e guarde o endereço: ao compartilhar de novo, o link muda.
+**3. Comandos do Pipeline**
+```bash
+# Validação estrutural do Prompt (Pytest)
+pytest tests/test_prompts.py
 
-## Dicas Finais
+# Baixar prompt antigo
+python src/pull_prompts.py
 
-- Lembre-se da importância da especificidade, contexto e persona ao refatorar prompts
-- Use Few-shot Learning com 2-3 exemplos claros para melhorar drasticamente a performance
-- Chain of Thought (CoT) é excelente para tarefas que exigem raciocínio complexo (como análise de bugs)
-- Use o Tracing do LangSmith como sua principal ferramenta de debug - ele mostra exatamente o que o LLM está "pensando"
-- Não altere os datasets de avaliação - apenas os prompts em prompts/bug_to_user_story_v2.yml
-- Itere, itere, itere - é normal precisar de 3-5 iterações para atingir 0.8 em todas as métricas
-- Documente seu processo - a jornada de otimização é tão importante quanto o resultado final
+# Fazer Push do Prompt Otimizado (v2) para o Hub
+python src/push_prompts.py
+
+# Iniciar Avaliação (Aguarde alguns minutos para a conclusão)
+python src/evaluate.py
+```
