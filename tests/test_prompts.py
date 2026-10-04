@@ -9,19 +9,17 @@ from pathlib import Path
 # Adicionar src ao path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from utils import validate_prompt_structure
-
 def load_prompts(file_path: str):
     """Carrega prompts do arquivo YAML."""
     with open(file_path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
-class TestPrompts:
-    @pytest.fixture(scope="class")
-    def prompt_data(self):
-        prompt_path = Path(__file__).parent.parent / "prompts" / "bug_to_user_story_v2.yml"
-        return load_prompts(str(prompt_path))
+@pytest.fixture(scope="module")
+def prompt_data():
+    prompt_path = Path(__file__).parent.parent / "prompts" / "bug_to_user_story_v2.yml"
+    return load_prompts(str(prompt_path))
 
+class TestPrompts:
     def test_prompt_has_system_prompt(self, prompt_data):
         """Verifica se o campo 'system_prompt' existe e não está vazio."""
         assert "system_prompt" in prompt_data, "Campo 'system_prompt' ausente no YAML."
