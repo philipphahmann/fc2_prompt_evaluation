@@ -329,6 +329,11 @@ python src/evaluate.py
 - **Screenshots das Métricas (≥ 0.8)**:
   ![Feedback Scores](assets/feedback_scores.png)
 
+- **Exemplos de Traces (LangSmith)**:
+  - `assets/traces/Botão de adicionar ao carrinho não funciona no produto ID 1234.json`
+  - `assets/traces/Campo de email aceita texto sem @, permitindo cadastros inválidos.json`
+  - `assets/traces/No iOS, ao girar o celular para landscape, o layout da tela de perfil fica quebrado.json`
+
 ---
 
 ### C) Como Executar
